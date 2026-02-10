@@ -1,0 +1,27 @@
+log:
+  level: DEBUG
+  format: json
+
+entryPoints:
+  websecure:
+    address: ":443"
+  web:
+    address: ":80"
+
+providers:
+  file:
+    filename: /traefik/dynamic.yml
+    watch: true
+
+api:
+  dashboard: true
+  insecure: false
+
+certificatesResolvers:
+  stepresolver:
+    acme:
+      email: step@domain.com
+      caServer: "https://stepca.domain.com:9000/acme/acme-provisioner/directory"
+      storage: /certs/acme.json
+      httpChallenge:
+        entryPoint: web

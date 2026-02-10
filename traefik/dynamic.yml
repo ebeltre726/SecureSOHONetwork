@@ -1,0 +1,65 @@
+http:
+  middlewares:
+    nextcloud-rewrite:
+      redirectRegex:
+        regex: ^/\.well-known/(caldav|carddav)
+        replacement: /remote.php/dav/
+        permanent: true
+    hsts:
+      headers:
+        stsSeconds: 15552000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        forceSTSHeader: true
+    secure-headers:
+      headers:
+        frameDeny: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        referrerPolicy: no-referrer
+    https-redirect:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+  routers:
+    traefik-dashboard:
+      rule: "Host(`traefik.domain.com`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+      entryPoints:
+        - websecure
+      service: api@internal
+      tls:
+        certResolver: stepresolver
+
+    nextcloud:
+      rule: "Host(`nextcloud.domain.com`)"
+      entryPoints:
+        - websecure
+      service: nextcloud
+      middlewares:
+        - hsts
+        - secure-headers
+        - nextcloud-rewrite
+      tls:
+        certResolver: stepresolver
+
+      vaultwarden:
+        rule: "Host(`vaultwarden.domain.com`)"
+        entryPoints:
+          - websecure
+        service: vaultwarden
+        middlewares:
+          - hsts
+          - secure-headers
+        tls:
+          certResolver: stepresolver
+
+  services:
+    nextcloud:
+      loadBalancer:
+        servers:
+          - url: "http://nextcloud:80"
+    vaultwarden:
+      loadBalancer:
+        servers:
+          - url: "http://vaultwarden:80"

@@ -1,0 +1,30 @@
+networks:
+  traefik-network:
+    external: true
+  vaultwarden-internal:
+    internal: true
+
+secrets:
+  vaultwarden_admin_token:
+    external: true
+
+services:
+  vaultwarden:
+    image: vaultwarden/server:1.35.2
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+    networks:
+      - traefik-network
+      - vaultwarden-internal
+    secrets:
+      - vaultwarden_admin_token
+    environment:
+      DOMAIN: "https://vaultwarden.domain.com"
+      ADMIN_TOKEN_FILE: /run/secrets/vaultwarden_admin_token
+    volumes:
+      - vaultwarden_data:/data:rw,X
+
+volumes:
+  vaultwarden_data:
